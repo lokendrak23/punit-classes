@@ -1,0 +1,10 @@
+import { icon } from '../components/icons.js';
+import { pageHead, pill } from '../components/ui.js';
+import { messagesList } from '../components/chat.js';
+import { esc } from '../lib/util.js';
+export function doubtsPage(data, ui, admin) {
+  const entries = data.doubts.map(d => ({ ...d, canDelete: admin }));
+  return `${pageHead({ eyebrow:'YOU ASK, WE HELP', title:'Doubt corner', detail:'No question is too small. Share your doubts with your classroom.' })}<section class="doubt-layout"><div class="surface doubt-surface"><div class="doubt-heading"><div class="doubt-heading-icon">${icon('chat',22)}</div><div><h2>Class discussion</h2><p>Ask a question or share a notebook photo.</p></div>${pill(`${data.doubts.length} POSTS`, 'blue')}</div><div class="doubt-messages" id="doubts-list">${messagesList(entries,'Be the first to ask', 'Your question could help someone else too.')}</div>
+    <form class="doubt-composer" id="doubt-form"><div class="doubt-photo-holder" ${ui.photo ? '' : 'hidden'} id="selected-photo">${ui.photo ? `<img src="${esc(ui.photo.data)}" alt="Attachment preview"/><span>Image optimized · ${ui.photo.kb} KB</span><button class="square-action" type="button" data-action="remove-photo" aria-label="Remove attachment">${icon('close',17)}</button>` : ''}</div><div class="doubt-compose-row"><label for="doubt-photo-input" class="square-action photo-upload" title="Attach a photo">${icon('photo',20)}<input id="doubt-photo-input" type="file" accept="image/*" hidden /></label><input id="doubt-message" name="message" aria-label="Write your doubt" maxlength="1500" placeholder="Type your question here..." /><button type="submit" class="button button-primary">Post ${icon('send',16)}</button></div></form>
+  </div><aside class="doubt-aside"><div class="doubt-aside-illustration">${icon('circlehelp',36)}</div><h3>Curiosity is a strength.</h3><p>Ask clearly, add what you’ve already tried, and attach a photo if it helps explain the problem.</p><div class="teacher-info">${icon('spark',19)} <span>Replies from Punit Sir are highlighted in the discussion.</span></div></aside></section>`;
+}

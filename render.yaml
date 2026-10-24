@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: punit-classes
+    runtime: docker
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '10000'
+      - key: APPWRITE_ENDPOINT
+        value: https://fra.cloud.appwrite.io/v1
+      - key: APPWRITE_DATABASE_TYPE
+        value: tablesdb
+      - key: APPWRITE_DATABASE_ID
+        value: punit_classes_prod
+      - key: APPWRITE_PROJECT_ID
+        sync: false
+      - key: APPWRITE_API_KEY
+        sync: false
+      - key: BATCH_ACCESS_CODE
+        sync: false
+      - key: TEACHER_USER_IDS
+        sync: false
+      - key: APP_ORIGIN
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
