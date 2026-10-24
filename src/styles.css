@@ -44,3 +44,42 @@
 .import-warning{background:#fff3d6;color:#6b4300;padding:.75rem;border-radius:.7rem;margin:.5rem 0}
 .import-question .field{margin-bottom:.55rem}
 .import-question input[type=checkbox]{width:auto;margin-right:.5rem}
+
+/* Mobile-first faculty usability and form reliability */
+[data-upload-panel][hidden]{display:none!important}
+.admin-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.admin-quick-actions button{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #e2e6f2;background:#fff;border-radius:14px;padding:15px 9px;color:#38436b;font-weight:750;font-size:12px;min-height:56px;cursor:pointer}
+.admin-quick-actions button:hover,.admin-quick-actions button:focus-visible{border-color:#8e81f2;background:#f7f5ff;color:#6553d0}
+.admin-quick-actions button svg{flex-shrink:0}
+.admin-panel[id]{scroll-margin-top:82px}
+.import-review-list{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
+button,.button,.bottom-link{touch-action:manipulation}
+@media(max-width:680px){
+ .admin-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .admin-quick-actions button{min-height:62px;justify-content:flex-start;padding:12px;font-size:12px}
+ .admin-grid{gap:14px}.admin-panel{padding:17px 14px;border-radius:16px}
+ .admin-status-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .admin-status{min-width:0;flex-direction:column;align-items:flex-start;gap:4px}
+ .admin-status small{font-size:10px;line-height:1.3}
+ .admin-panel-heading{align-items:flex-start;gap:9px;margin-bottom:15px}
+ .admin-panel-heading h2{font-size:16px;line-height:1.4}
+ .admin-panel-heading p{font-size:12px}
+ .stack-form .button[type=submit],.stack-form .button.wide{width:100%;min-height:48px}
+ .button-row{display:flex;flex-wrap:wrap;gap:9px;width:100%}
+ .button-row .button{min-height:46px;flex:1 1 150px;justify-content:center;white-space:normal}
+ .options-editor{grid-template-columns:1fr}
+ .segmented button{min-height:47px;font-size:12px}
+ .import-review-list{max-height:none;overflow:visible;padding-right:0}
+ .import-question{padding:12px;border-radius:12px}
+ .import-question-head{align-items:flex-start;flex-wrap:wrap;gap:8px}
+ .import-question-head .button{min-height:42px}
+ .import-review>.button-row{display:grid;grid-template-columns:1fr}
+ .import-review>.button-row .button{width:100%;min-height:48px}
+ input,textarea,select{font-size:16px!important;max-width:100%;min-width:0}
+ .material-actions,.card-actions{display:flex;flex-wrap:wrap;gap:8px}
+ .material-actions .button,.card-actions .button{min-height:44px}
+ .bottom-link{min-width:0;flex:1;min-height:48px}
+ .bottom-nav{justify-content:space-between}
+ .main-content{padding-bottom:calc(105px + env(safe-area-inset-bottom))}
+}
+@media(max-width:380px){.admin-quick-actions button{font-size:11px}.admin-status-grid{grid-template-columns:1fr 1fr}}

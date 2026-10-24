@@ -31,8 +31,11 @@ function renderPage(){
   const pages={home:()=>dashboard(data,user,ui),lectures:()=>lecturesPage(data,ui,store.isAdmin()),notes:()=>materialsPage(data,ui,store.isAdmin()),tests:()=>testsPage(data,ui,store.isAdmin()),doubts:()=>doubtsPage(data,ui,store.isAdmin()),admin:()=>adminPage(data,ui)};
   const scrollChat = ui.tab==='home' ? document.getElementById('live-chat-list') : ui.tab==='doubts' ? document.getElementById('doubts-list') : null;
   const oldScroll=scrollChat?scrollChat.scrollTop:null;
+  const previousY=window.scrollY;
+  const reviewScroll=document.querySelector('.import-review-list')?.scrollTop;
   host.innerHTML=(pages[ui.tab]||pages.home)();updateNavigation(ui.tab,data);
   const box=document.getElementById(ui.tab==='home'?'live-chat-list':'doubts-list');if(box && oldScroll!==null)box.scrollTop=oldScroll;
+  if(ui.tab==='admin'){const review=document.querySelector('.import-review-list');if(review && reviewScroll!=null)review.scrollTop=reviewScroll;window.scrollTo(0,previousY);}
 }
 function navigate(tab){if(!store.user()||store.user().role==='unenrolled'||(tab==='admin'&&!store.isAdmin()))return;ui.tab=tab; if(tab==='home')ui.search='';renderPage();document.querySelector('.workspace')?.scrollTo(0,0);window.scrollTo(0,0);}
 function refreshUI(){if(!store.user())showLogin();else if(!pageInitialized)mountApp();else renderPage();}
@@ -60,6 +63,9 @@ async function refreshData({silent=true,force=false}={}) {
         list.innerHTML=messagesList(next.liveChat,'It’s quiet here','Ask a question or say hello to your class.');
         if(bottom)list.scrollTop=list.scrollHeight;
       }
+    } else if(ui.tab==='admin' && !force){
+      // Polling must never replace faculty forms, file selections or a long AI review.
+      store.setData(next,false);updateNavigation(ui.tab,next);
     } else store.setData(next,!typing);
   } catch(err) {if(err.status===401){store.clear();toast('Session expired. Please sign in again.',true);}else if(!silent)toast(err.message,true);}
   finally{loading=false;}
@@ -90,7 +96,23 @@ document.addEventListener('click',async event=>{
       case 'answer':if(!ui.testSubmitted){ui.answers[Number(index)]=Number(option);renderPage();}break;
       case 'submit-test':await submitTest();break;
       case 'retake':ui.answers={};ui.testSubmitted=false;ui.quizScore=null;ui.reviewCorrect=null;renderPage();break;
-      case 'upload-mode':ui.uploadMode=mode;renderPage();break;
+      case 'upload-mode':{
+        ui.uploadMode=mode;
+        const form=document.getElementById('publish-form');
+        if(form){
+          form.querySelectorAll('[data-action="upload-mode"]').forEach(btn=>{btn.classList.toggle('on',btn.dataset.mode===mode);btn.setAttribute('aria-pressed',String(btn.dataset.mode===mode));});
+          form.querySelectorAll('[data-upload-panel]').forEach(panel=>{panel.hidden=panel.dataset.uploadPanel!==mode;});
+          const link=form.querySelector('[name="url"]'),file=form.querySelector('[name="file"]');
+          if(link)link.required=mode==='link';if(file)file.required=mode==='file';
+          const publishButton=document.getElementById('publish-button');if(publishButton)publishButton.disabled=mode==='file'&&!ui.uploadsEnabled;
+        }
+        break;
+      }
+      case 'admin-jump':{
+        const target=document.getElementById(el.dataset.target);
+        if(target){target.open=true;target.scrollIntoView({behavior:'smooth',block:'start'});}
+        break;
+      }
       case 'remove-photo':ui.photo=null;renderPage();break;
       case 'delete-lecture':if(confirm('Delete this lecture? Uploaded media remains in Cloudinary.'))await mutate('DELETE',`/lectures/${id}`,undefined,'Lecture removed.');break;
       case 'delete-note':if(confirm('Delete this resource? Uploaded media remains in Cloudinary.'))await mutate('DELETE',`/notes/${id}`,undefined,'Resource removed.');break;
