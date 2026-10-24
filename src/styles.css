@@ -35,3 +35,12 @@
 .live-class-banner{background:linear-gradient(105deg,#2b255e,#6958e9);border-radius:14px;color:#fff;display:flex;align-items:center;gap:12px;padding:13px 18px;margin-top:18px}
 .live-class-banner>div{flex:1;min-width:0}.live-class-banner strong,.live-class-banner small{display:block}.live-class-banner strong{font-size:12px}.live-class-banner small{font-size:10px;margin-top:4px;color:#d9d0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.live-class-banner .button{font-size:10px;min-height:36px}.live-class-pulse{height:10px;width:10px;border-radius:50%;background:#ff628b;box-shadow:0 0 0 5px #ff628b30;flex-shrink:0}
 @media(max-width:680px){.mobile-logout{display:flex}.topbar-right{gap:8px}.search-box{max-width:145px}.live-class-banner{padding:12px;gap:9px}.live-class-banner .button{padding:8px;font-size:9px;min-height:32px}.live-class-banner strong{font-size:11px}.live-class-banner small{font-size:9px}}
+/* Faculty PDF/Word question review */
+.import-review{margin-top:1.5rem;border-top:1px solid var(--border, #d7dce7);padding-top:1.5rem}
+.import-review-list{display:grid;gap:1rem;margin:1rem 0;max-height:65vh;overflow:auto;padding-right:.5rem}
+.import-question{border:1px solid #bccbe1;border-radius:14px;padding:1rem;background:var(--surface,#fff)}
+.import-question.needs-review{border-color:#cc8b36}
+.import-question-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem}
+.import-warning{background:#fff3d6;color:#6b4300;padding:.75rem;border-radius:.7rem;margin:.5rem 0}
+.import-question .field{margin-bottom:.55rem}
+.import-question input[type=checkbox]{width:auto;margin-right:.5rem}

@@ -115,3 +115,32 @@ test('TablesDB encodes structured quiz fields and decodes row responses',async()
  const rows=await app.list('questions');
  assert.deepEqual(rows[0].options,['A','B','C','D']);
 });
+
+test('bulk import stays faculty-only and rejects missing/unverified correct answers',async()=>{
+ const {app,collections}=fakeDB(),api=createApi(env,app);
+ const q={q:'What is force?',options:['Newton','Joule','Watt','Tesla'],correct:0};
+ await assert.rejects(call(api,'POST','/api/test/import/publish',{questions:[q]},'a_session_project1=student'),{status:403});
+ await assert.rejects(call(api,'POST','/api/test/import/publish',{questions:[{...q,correct:-1}]},'a_session_project1=faculty'),{status:400});
+ const r=await call(api,'POST','/api/test/import/publish',{title:'Chapter test',questions:[q]},'a_session_project1=faculty');
+ assert.equal(r.body.added,1);
+ assert.equal(collections.questions.size,2);
+ assert.equal(collections.settings.get('classroom').testVersion,2);
+ const student=await call(api,'GET','/api/classroom');
+ assert.equal(student.body.test.questions[1].correct,undefined);
+});
+
+test('PDF AI extraction accepts structured output and refuses oversized uploads',async()=>{
+ const { extractQuestions }=await import('../server/importer.mjs');
+ const sample=Buffer.from('%PDF-1.4\n').toString('base64');
+ const mock=async(url,opts)=>{
+   assert.equal(url,'https://api.openai.com/v1/responses');
+   const body=JSON.parse(opts.body);
+   assert.equal(body.store,false);
+   assert.equal(body.input[0].content[0].type,'input_file');
+   return new Response(JSON.stringify({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({questions:[{q:'Q?',options:['A','B','C','D'],correct:-1,needsReview:true}],warnings:['Answer key missing']})}]}]}),{status:200});
+ };
+ const result=await extractQuestions({filename:'paper.pdf',base64:sample},{OPENAI_API_KEY:'dummy'},mock);
+ assert.equal(result.questions.length,1);
+ assert.equal(result.questions[0].correct,-1);
+ await assert.rejects(extractQuestions({filename:'paper.pdf',base64:'X'.repeat(12_000_000)},{OPENAI_API_KEY:'dummy'},mock),{status:400});
+});

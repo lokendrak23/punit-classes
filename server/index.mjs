@@ -31,7 +31,7 @@ export function createServer(env = process.env, api = createApi(env)) {
         let body = {};
         if (isMutation) {
           let raw='';
-          for await (const part of req) { raw+=part; if (raw.length>180_000) throw new HttpError(413,'Request too large. Upload media to Cloudinary.'); }
+          for await (const part of req) { raw+=part; if (raw.length>11_250_000) throw new HttpError(413,'Request too large. Maximum question paper size is 8 MB.'); }
           try { body=raw ? JSON.parse(raw) : {}; } catch { throw new HttpError(400,'Invalid JSON.'); }
         }
         const cookie = String(req.headers.cookie||'').split(';').map(c=>c.trim()).filter(c=>/^a_session_[A-Za-z0-9_]+=/.test(c)).join('; ');

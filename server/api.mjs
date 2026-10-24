@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { extractQuestions, validateQuestion } from './importer.mjs';
 import { createAppwrite } from './appwrite.mjs';
 import { assert, HttpError, required, emailValid, strongPassword, compareSecret, allowedLink, cloudPhotoUrl, cleanText, scoreQuiz, rank, shaId, appwriteCookieHeaders, clearCookies, uuid, rateLimiter } from './security.mjs';
 const defaults = { testTitle:'', testVersion:1, isLive:false, liveTitle:'', liveUrl:'' };
@@ -164,6 +165,29 @@ export function createApi(env = process.env, app = createAppwrite(env)) {
       const s=await settings();
       await app.put('settings','classroom',{ testTitle:s.testTitle||'', testVersion:s.testVersion, isLive:body.isLive, liveTitle:body.isLive?body.title.trim():'', liveUrl:body.isLive?body.url.trim():'' });
       return {status:200,body:{ok:true}};
+    }
+    if (method==='POST' && path==='/api/test/import/preview') {
+      const result=await extractQuestions(body||{},env);
+      return {status:200,body:result};
+    }
+    if (method==='POST' && path==='/api/test/import/publish') {
+      assert(Array.isArray(body?.questions)&&body.questions.length>=1&&body.questions.length<=100,400,'Provide 1 to 100 reviewed questions.');
+      assert(body.questions.every(validateQuestion),400,'Each question needs four options and a verified correct answer.');
+      const s=await settings();
+      const existing=(await app.list('questions')).length;
+      assert(existing+body.questions.length<=100,400,`This test has ${existing} questions. Maximum is 100.`);
+      let saved=0;
+      try {
+        for(const q of body.questions){
+          await app.create('questions',{q:q.q.trim(),options:q.options.map(x=>x.trim()),correct:q.correct,createdAt:time()});
+          saved++;
+        }
+      } catch(error){
+        if(saved)await bump({...s,testTitle:cleanText(body.title,150)||s.testTitle||'Imported test'});
+        throw new HttpError(502,`${saved} of ${body.questions.length} questions saved before a database error. Reload to inspect before retrying.`);
+      }
+      await bump({...s,testTitle:cleanText(body.title,150)||s.testTitle||'Imported test'});
+      return {status:201,body:{ok:true,added:saved}};
     }
     if (method==='POST' && path==='/api/test/questions') {
       assert(required(body?.q,1000) && Array.isArray(body?.options) && body.options.length===4 && body.options.every(x=>required(x,300)),400,'Provide a question and four options.');

@@ -12,7 +12,7 @@ import { adminPage } from './pages/admin.js';
 import { messagesList } from './components/chat.js';
 
 const root=document.getElementById('app');
-const ui={tab:'home',search:'',notesFilter:'all',activeVideo:null,answers:{},testSubmitted:false,quizScore:null,reviewCorrect:null,photo:null,uploadMode:'link',uploadsEnabled:false,mode:'login'};
+const ui={tab:'home',search:'',notesFilter:'all',activeVideo:null,answers:{},testSubmitted:false,quizScore:null,reviewCorrect:null,photo:null,uploadMode:'link',uploadsEnabled:false,mode:'login',importDraft:null,importTitle:''};
 let pageInitialized=false, loading=false, toastTimer, currentVersion=null;
 function toast(message,error=false) {
   const holder=document.getElementById('toast-region');
@@ -79,6 +79,9 @@ document.addEventListener('click',async event=>{
   const {action,id,index,option,mode,filter}=el.dataset;
   try{
     switch(action){
+      case 'import-remove':if(ui.importDraft){ui.importDraft.questions.splice(Number(index),1);renderPage();}break;
+      case 'import-discard':ui.importDraft=null;ui.importTitle='';renderPage();break;
+      case 'import-publish':await publishImportedQuestions();break;
       case 'auth-mode':ui.mode=mode;showLogin();break;
       case 'logout':await doLogout();break;
       case 'filter-notes':ui.notesFilter=filter;renderPage();break;
@@ -100,7 +103,16 @@ document.addEventListener('click',async event=>{
     }
   }catch(err){toast(err.message,true);}
 });
-document.addEventListener('input',event=>{if(event.target.id==='global-search'){ui.search=event.target.value;if(['lectures','notes'].includes(ui.tab))renderPage();}});
+document.addEventListener('input',event=>{
+  if(event.target.id==='import-test-title'){ui.importTitle=event.target.value;return;}
+  const field=event.target.dataset?.importField, container=event.target.closest?.('[data-import-index]');
+  if(field && container && ui.importDraft){const q=ui.importDraft.questions[Number(container.dataset.importIndex)];if(q){
+    if(field==='q')q.q=event.target.value;
+    else if(field.startsWith('option'))q.options[Number(field.slice(-1))]=event.target.value;
+    else if(field==='correct')q.correct=Number(event.target.value);
+    else if(field==='verified')q.needsReview=!event.target.checked;
+  }return;}
+  if(event.target.id==='global-search'){ui.search=event.target.value;if(['lectures','notes'].includes(ui.tab))renderPage();}});
 document.addEventListener('keydown',event=>{if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();navigate('lectures');}});
 document.addEventListener('change',async event=>{
   if(event.target.id!=='doubt-photo-input')return;
@@ -110,7 +122,7 @@ document.addEventListener('change',async event=>{
 });
 document.addEventListener('submit',async event=>{
   const form=event.target, id=form?.id;
-  if(!['login-form','join-form','live-chat-form','doubt-form','publish-form','live-form','question-form'].includes(id))return;
+  if(!['login-form','join-form','live-chat-form','doubt-form','publish-form','live-form','question-form','question-import-form'].includes(id))return;
   event.preventDefault();
   const button=form.querySelector('[type="submit"]');if(button?.disabled)return;if(button)button.disabled=true;
   try{
@@ -136,12 +148,33 @@ document.addEventListener('submit',async event=>{
       const url=form.elements.url.value.trim();
       await mutate('POST','/live',{isLive:true,title,url},'Live class published.');ui.activeVideo=null;
     }
+    if(id==='question-import-form'){
+      const file=form.elements.file.files?.[0];
+      if(!file||file.size>8*1048576)throw new Error('Choose a PDF or DOCX file smaller than 8 MB.');
+      if(!/\.(pdf|docx)$/i.test(file.name))throw new Error('Only PDF or DOCX files are accepted.');
+      toast('Extracting questions with AI. Large documents may take some time.');
+      const base64=await readBase64(file);
+      const result=await api('/test/import/preview',{method:'POST',body:{filename:file.name,base64}});
+      ui.importDraft=result;ui.importTitle=store.get().test.title||file.name.replace(/\.(pdf|docx)$/i,'');
+      renderPage();toast(`Extracted ${result.questions.length} questions. Review before publishing.`);
+    }
     if(id==='question-form'){
       const options=[0,1,2,3].map(i=>form.elements[`option${i}`].value.trim());
       await mutate('POST','/test/questions',{q:form.elements.question.value.trim(),options,correct:Number(form.elements.correct.value),title:form.elements.testTitle.value.trim()},'Quiz question added.');
     }
   }catch(err){if(id==='login-form')loginError(err.message);else toast(err.message,true);}finally{if(button?.isConnected)button.disabled=false;}
 });
+function readBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read document.'));reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.readAsDataURL(file);});}
+async function publishImportedQuestions(){
+  if(!ui.importDraft?.questions?.length)throw new Error('There are no questions to publish.');
+  const qs=ui.importDraft.questions;
+  if(qs.some(q=>!q.q?.trim()||q.options?.length!==4||q.options.some(o=>!o.trim())||q.correct<0||q.correct>3||q.needsReview))throw new Error('Review every flagged question, fill missing options and verify every correct answer.');
+  if(store.get().test.questions.length+qs.length>100)throw new Error('Test supports 100 questions maximum. Clear or remove existing questions first.');
+  if(!confirm(`Publish ${qs.length} questions? Existing quiz scores will reset for this updated test.`))return;
+  const title=ui.importTitle.trim()||'Imported test';
+  const result=await api('/test/import/publish',{method:'POST',body:{title,questions:qs.map(({q,options,correct})=>({q,options,correct}))}});
+  ui.importDraft=null;ui.importTitle='';await refreshData({silent:false,force:true});toast(`${result.added} questions published.`);navigate('tests');
+}
 async function publish(form){
   const title=form.elements.title.value.trim(), chapter=form.elements.chapter.value.trim()||'General',category=form.elements.category.value;
   let url='',size='Link',bytes=0;
