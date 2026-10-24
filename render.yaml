@@ -30,7 +30,7 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
-      - key: OPENAI_IMPORT_MODEL
-        value: gpt-4.1-mini
+      - key: GEMINI_IMPORT_MODEL
+        value: gemini-2.5-flash

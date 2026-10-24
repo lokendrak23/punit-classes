@@ -129,18 +129,25 @@ test('bulk import stays faculty-only and rejects missing/unverified correct answ
  assert.equal(student.body.test.questions[1].correct,undefined);
 });
 
-test('PDF AI extraction accepts structured output and refuses oversized uploads',async()=>{
+test('PDF Gemini extraction accepts structured output and refuses oversized uploads',async()=>{
  const { extractQuestions }=await import('../server/importer.mjs');
  const sample=Buffer.from('%PDF-1.4\n').toString('base64');
  const mock=async(url,opts)=>{
-   assert.equal(url,'https://api.openai.com/v1/responses');
+   assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent');
+   assert.equal(opts.headers['x-goog-api-key'],'dummy');
    const body=JSON.parse(opts.body);
-   assert.equal(body.store,false);
-   assert.equal(body.input[0].content[0].type,'input_file');
-   return new Response(JSON.stringify({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({questions:[{q:'Q?',options:['A','B','C','D'],correct:-1,needsReview:true}],warnings:['Answer key missing']})}]}]}),{status:200});
+   assert.equal(body.generationConfig.responseMimeType,'application/json');
+   assert.equal(body.contents[0].parts[1].inlineData.mimeType,'application/pdf');
+   return new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({questions:[{q:'Q?',options:['A','B','C','D'],correct:-1,needsReview:true}],warnings:['Answer key missing']})}]}}]}),{status:200});
  };
- const result=await extractQuestions({filename:'paper.pdf',base64:sample},{OPENAI_API_KEY:'dummy'},mock);
+ const result=await extractQuestions({filename:'paper.pdf',base64:sample},{GEMINI_API_KEY:'dummy'},mock);
  assert.equal(result.questions.length,1);
  assert.equal(result.questions[0].correct,-1);
- await assert.rejects(extractQuestions({filename:'paper.pdf',base64:'X'.repeat(12_000_000)},{OPENAI_API_KEY:'dummy'},mock),{status:400});
+ await assert.rejects(extractQuestions({filename:'paper.pdf',base64:'X'.repeat(12_000_000)},{GEMINI_API_KEY:'dummy'},mock),{status:400});
+});
+test('Gemini quota errors explain next steps',async()=>{
+ const {extractQuestions}=await import('../server/importer.mjs');
+ const sample=Buffer.from('%PDF-1.4\n').toString('base64');
+ const mock=async()=>new Response(JSON.stringify({error:{message:'RESOURCE_EXHAUSTED'}}),{status:429});
+ await assert.rejects(extractQuestions({filename:'paper.pdf',base64:sample},{GEMINI_API_KEY:'dummy'},mock),{status:429});
 });
