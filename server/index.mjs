@@ -47,7 +47,7 @@ export function createServer(env = process.env, api = createApi(env)) {
       if(!target.startsWith(root+path.sep)) throw new HttpError(404,'Not found.');
       const info=await stat(target);
       if(!info.isFile()) throw new HttpError(404,'Not found.');
-      res.writeHead(200,{ 'Content-Type':(mime[path.extname(target)]||'application/octet-stream')+'; charset=utf-8', 'Cache-Control':secure && file!=='/index.html'?'public, max-age=600':'no-cache' });
+      res.writeHead(200,{ 'Content-Type':(mime[path.extname(target)]||'application/octet-stream')+'; charset=utf-8', 'Cache-Control':'no-cache' });
       if(req.method==='HEAD') return res.end();
       res.end(await readFile(target));
     } catch(error) {

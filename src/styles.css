@@ -83,3 +83,124 @@ button,.button,.bottom-link{touch-action:manipulation}
  .main-content{padding-bottom:calc(105px + env(safe-area-inset-bottom))}
 }
 @media(max-width:380px){.admin-quick-actions button{font-size:11px}.admin-status-grid{grid-template-columns:1fr 1fr}}
+
+/* v4 — simple, reliable phone navigation and lesson playback */
+.mobile-admin-link,.mobile-page-search,.login-mobile-hero{display:none}
+.lecture-player-card{padding:18px;margin:0 0 22px;border:1px solid #e5e8f5;scroll-margin-top:85px}
+.lecture-player-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:13px}
+.lecture-player-top h2{font-size:19px;line-height:1.4;margin-top:5px;overflow-wrap:anywhere}
+.lecture-player-top .button{flex-shrink:0}
+.lecture-player-card .player-frame{width:100%;aspect-ratio:16/9;max-height:70vh;background:#151c36}
+.lecture-player-card .player-footer{font-size:12px;flex-wrap:wrap;row-gap:9px}
+.extract-progress[hidden]{display:none!important}
+.extract-progress{padding:17px;border:1px solid #dbdef8;border-radius:14px;background:#f7f6ff;margin-top:13px}
+.extract-progress-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:#342b82}
+.extract-progress-heading span{font-size:11px;font-weight:700;color:#786cab;white-space:nowrap}
+.extract-progress-track{width:100%;height:9px;border-radius:999px;background:#e1ddf6;overflow:hidden;margin:12px 0 10px;position:relative}
+.extract-progress-track>span{display:block;height:100%;width:0;background:#6958ef;border-radius:999px;transition:width .22s ease}
+.extract-progress.is-indeterminate .extract-progress-track>span{width:36%!important;position:absolute;left:0;animation:extract-indeterminate 1.65s ease-in-out infinite;transition:none}
+.extract-progress.is-error{background:#fff5f6;border-color:#f3d6df}
+.extract-progress.is-error .extract-progress-heading{color:#af345a}
+.extract-progress.is-error .extract-progress-track>span{width:0!important;animation:none}
+.extract-progress p{font-size:12px;line-height:1.5;color:#48416e}
+.extract-progress small{display:block;margin-top:7px;color:#77728f;font-size:10px;line-height:1.5}
+@keyframes extract-indeterminate{from{transform:translateX(-110%)}to{transform:translateX(290%)}}
+.login-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#f2f3fa;padding:5px;gap:4px;border-radius:13px;margin-bottom:22px}
+.login-mode-switch button{min-height:43px;border:0;border-radius:10px;background:transparent;color:#6c7593;font-weight:750;font-size:13px}
+.login-mode-switch button.selected{background:#fff;color:#5f4de0;box-shadow:0 3px 10px #25316b12}
+.password-field{position:relative;display:flex;align-items:center}
+.password-field input{width:100%;padding-right:66px!important}
+.password-field button{position:absolute;right:7px;padding:8px;min-width:48px;border:0;background:transparent;color:#6858d8;font-size:12px;font-weight:800}
+@media(max-width:680px){
+  html{scroll-padding-top:74px}
+  body{overflow-x:hidden}
+  .app-layout{min-height:100dvh}
+  .topbar{position:sticky;top:0;z-index:45;min-height:58px;height:58px;background:rgba(255,255,255,.98);border-bottom:1px solid #ececf5;gap:6px;padding:0 14px}
+  .mobile-brand{flex:1;min-width:0;font-size:14px;gap:9px}
+  .mobile-brand strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar-right{flex:0 0 auto;gap:8px}
+  .topbar .search-box{display:none}
+  .mobile-admin-link{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #dcd8ff;border-radius:11px;background:#f2efff;color:#5d4bcf;padding:8px 11px;font-size:12px;font-weight:800;white-space:nowrap}
+  .mobile-admin-link.is-active{background:#6857e9;color:#fff;border-color:#6857e9}
+  .mobile-logout{display:flex;width:38px;height:38px;border-radius:11px}
+  .bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;justify-items:stretch;gap:2px;position:fixed;inset:auto 0 0;bottom:0;width:100%;height:auto;min-height:68px;padding:7px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#fff;box-shadow:0 -10px 30px #17234812;border-top:1px solid #e9ecf3;z-index:55}
+  .bottom-link{min-width:0;width:100%;height:51px;min-height:51px;max-width:none;border-radius:13px;gap:4px;padding:6px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:10px;letter-spacing:0;font-weight:750;line-height:1;white-space:nowrap}
+  .bottom-link svg{height:20px;width:20px}
+  .bottom-link.is-active{background:#f0ecff;color:#5c49d2}
+  .main-content{padding:18px 14px calc(100px + env(safe-area-inset-bottom));min-height:calc(100dvh - 58px)}
+  .mobile-page-search{display:flex;align-items:center;gap:10px;width:100%;border-radius:13px;border:1px solid #e5e7f2;background:#fff;padding:0 13px;min-height:48px;margin-bottom:16px;color:#7a7e98}
+  .mobile-page-search input{border:0!important;outline:0!important;box-shadow:none!important;background:transparent;width:100%;height:44px;min-width:0;color:#172348;font-size:16px!important}
+  .lecture-player-card{padding:13px;border-radius:16px;scroll-margin-top:74px}
+  .lecture-player-top{align-items:center}
+  .lecture-player-top h2{font-size:16px}
+  .lecture-player-top .button{font-size:11px;min-height:42px;white-space:nowrap;padding:9px 10px}
+  .library-grid{grid-template-columns:1fr;gap:13px}
+  .library-card{min-width:0}
+  .lecture-art{height:155px}
+  .library-content{padding:14px}
+  .library-content h3{font-size:15px;min-height:0;margin:9px 0}
+  .card-actions{display:flex;align-items:center;gap:9px}
+  .card-actions .button{flex:1 1 auto;min-width:0;min-height:46px;font-size:12px;padding:10px 12px}
+  .card-actions .square-action{width:46px;height:46px;flex:0 0 46px}
+  .page-heading{flex-wrap:wrap;gap:10px}
+  .page-heading>.button{min-height:44px}
+  .material-row{flex-wrap:wrap}
+  .material-actions{margin-left:auto}
+  .material-actions .button{min-height:44px;font-size:12px}
+  .admin-grid{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+  .admin-grid>*{width:100%;min-width:0}
+  .admin-grid #admin-import{order:1}
+  .admin-grid #admin-content{order:2}
+  .admin-grid .admin-column{order:3}
+  .admin-grid .admin-test-panel:not(#admin-import){order:4}
+  .admin-grid #admin-manage{order:5}
+  .admin-panel[id]{scroll-margin-top:74px}
+  .login-layout{display:block;min-height:100dvh;background:linear-gradient(#6b59ed 0 150px,#f7f8fe 150px 100%)}
+  .login-form-side{display:block;min-height:100dvh;padding:0 0 max(22px,env(safe-area-inset-bottom));background:transparent}
+  .login-mobile-hero{display:flex;min-height:150px;padding:28px 22px 22px;flex-direction:column;justify-content:center;gap:14px;color:#fff}
+  .login-mobile-logo{display:flex;gap:11px;margin:0;align-items:center;font-family:Manrope,sans-serif;font-size:19px;letter-spacing:-.05em}
+  .login-mobile-logo .brand-mark{background:#ffffff29;box-shadow:none}
+  .login-mobile-hero p{color:#e7e3ff;font-size:13px;margin:0}
+  .login-card{margin:-4px auto 0;width:calc(100% - 24px);max-width:440px;background:#fff;border-radius:22px;padding:21px 20px 24px;box-shadow:0 16px 42px #282f6c20;position:relative}
+  .login-card h2{font-size:27px;line-height:1.25;margin:9px 0 7px}
+  .login-card .tiny-overline{font-size:10px}
+  .login-subhead{font-size:13px;line-height:1.5;margin-bottom:19px;color:#7986a1}
+  .login-card .field{margin-bottom:14px}
+  .login-card .field label{font-size:12px;margin-bottom:7px}
+  .login-card .field input{height:50px;min-height:50px;border-radius:12px;background:#fdfdff;font-size:16px!important}
+  .login-submit{width:100%;height:51px;min-height:51px;font-size:14px}
+  .login-notice{margin:14px 0 10px;line-height:1.5;font-size:11px;padding:11px}
+  .login-after{font-size:12px;margin-top:12px}
+  .login-copyright{text-align:center;padding:18px 12px 0;font-size:10px;color:#8995b0}
+  #toast-region{bottom:calc(90px + env(safe-area-inset-bottom))}
+}
+@media(max-width:370px){
+  .mobile-brand strong{font-size:12px}
+  .mobile-admin-link{padding:8px;min-width:38px}
+  .mobile-admin-link span{display:none}
+  .topbar{padding:0 10px}
+  .bottom-nav{padding-left:4px;padding-right:4px;gap:0}
+  .bottom-link{font-size:9px}
+  .login-card{padding:18px 15px 21px;width:calc(100% - 20px)}
+}
+@media(prefers-reduced-motion:reduce){.extract-progress.is-indeterminate .extract-progress-track>span{animation-duration:3s}}
+
+/* Final narrow-screen polish */
+@media(max-width:680px){
+ .dashboard-page .hero{height:auto;min-height:270px}
+ .dashboard-page .hero-copy{padding:28px 20px 22px;width:88%}
+ .dashboard-page .hero h1{font-size:26px;max-width:280px}
+ .dashboard-page .hero .button{min-height:44px;margin-top:4px}
+ .dashboard-page .hero-illustration{opacity:.22}
+ .extract-progress{scroll-margin-top:140px}
+ #extract-import{width:100%;min-height:48px}
+}
+@media(max-width:360px){.dashboard-page .hero{min-height:290px}.dashboard-page .hero-copy{width:100%}}
+@media(max-width:680px){
+ /* A 1fr grid track can retain a large min-content width on very small phones. */
+ .dashboard-columns,.test-layout,.doubt-layout{grid-template-columns:minmax(0,1fr)}
+ .dashboard-columns>*{min-width:0;max-width:100%}
+ .recent-panel,.next-panel{min-width:0;max-width:100%;overflow:hidden}
+ .recent-item{min-width:0}
+ .section-title{min-width:0;max-width:100%}
+}

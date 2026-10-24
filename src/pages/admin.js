@@ -38,7 +38,13 @@ export function adminPage(data, ui) {
     <section class="surface admin-panel admin-test-panel" id="admin-import"><div class="admin-panel-heading"><div class="admin-number">AI</div><div><h2>Import PDF / Word question paper</h2><p>Faculty-only: extract questions, inspect answers, then publish in bulk. Requires server GEMINI_API_KEY.</p></div></div>
       <form id="question-import-form" class="stack-form">
         <div class="field"><label for="import-file">PDF or Word (.docx), maximum 8 MB</label><input id="import-file" name="file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required /><small>Upload an answer key in the same document where possible. Scanned papers can be imperfect. Extraction uses an external AI service and may incur API charges.</small></div>
-        <button type="submit" class="button button-primary" id="extract-import">Extract for review</button>
+        <div class="extract-progress" id="extract-progress" hidden role="status" aria-live="polite">
+          <div class="extract-progress-heading"><strong id="extract-stage">Reading document</strong><span id="extract-stage-count">Step 1 of 3</span></div>
+          <div class="extract-progress-track" id="extract-progress-track" role="progressbar" aria-label="Preparing document" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="extract-progress-fill"></span></div>
+          <p id="extract-progress-detail">Preparing your document for extraction.</p>
+          <small>AI analysis time varies by paper length. The moving bar shows activity, not a percentage completed.</small>
+        </div>
+        <button type="submit" class="button button-primary" id="extract-import">${icon('spark',18)} Extract questions</button>
       </form>
       ${ui.importDraft ? `<div class="import-review"><div class="admin-panel-heading"><div><h3>Review ${ui.importDraft.questions.length} extracted questions</h3><p>${ui.importDraft.questions.filter(q=>q.correct<0||q.needsReview).length} flagged for attention. Check every option and correct answer before publishing.</p></div></div>
         ${(ui.importDraft.warnings||[]).map(w=>`<p class="import-warning">${esc(w)}</p>`).join('')}

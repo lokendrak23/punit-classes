@@ -12,7 +12,7 @@ import { adminPage } from './pages/admin.js';
 import { messagesList } from './components/chat.js';
 
 const root=document.getElementById('app');
-const ui={tab:'home',search:'',notesFilter:'all',activeVideo:null,answers:{},testSubmitted:false,quizScore:null,reviewCorrect:null,photo:null,uploadMode:'link',uploadsEnabled:false,mode:'login',importDraft:null,importTitle:''};
+const ui={tab:'home',search:'',notesFilter:'all',activeVideo:null,activeLectureId:null,answers:{},testSubmitted:false,quizScore:null,reviewCorrect:null,photo:null,uploadMode:'link',uploadsEnabled:false,mode:'login',importDraft:null,importTitle:''};
 let pageInitialized=false, loading=false, toastTimer, currentVersion=null;
 function toast(message,error=false) {
   const holder=document.getElementById('toast-region');
@@ -35,7 +35,10 @@ function renderPage(){
   const reviewScroll=document.querySelector('.import-review-list')?.scrollTop;
   host.innerHTML=(pages[ui.tab]||pages.home)();updateNavigation(ui.tab,data);
   const box=document.getElementById(ui.tab==='home'?'live-chat-list':'doubts-list');if(box && oldScroll!==null)box.scrollTop=oldScroll;
-  if(ui.tab==='admin'){const review=document.querySelector('.import-review-list');if(review && reviewScroll!=null)review.scrollTop=reviewScroll;window.scrollTo(0,previousY);}
+  if(ui.tab==='admin'){const review=document.querySelector('.import-review-list');if(review && reviewScroll!=null)review.scrollTop=reviewScroll;}
+  // Retain reading position when choosing a quiz answer or filtering results.
+  // navigate() explicitly scrolls to the top after switching tabs.
+  window.scrollTo(0,previousY);
 }
 function navigate(tab){if(!store.user()||store.user().role==='unenrolled'||(tab==='admin'&&!store.isAdmin()))return;ui.tab=tab; if(tab==='home')ui.search='';renderPage();document.querySelector('.workspace')?.scrollTo(0,0);window.scrollTo(0,0);}
 function refreshUI(){if(!store.user())showLogin();else if(!pageInitialized)mountApp();else renderPage();}
@@ -47,17 +50,18 @@ async function refreshData({silent=true,force=false}={}) {
     const next=await api('/classroom');
     if(currentVersion!==null && currentVersion!==next.test.version) {ui.answers={};ui.testSubmitted=false;ui.quizScore=null;ui.reviewCorrect=null;}
     currentVersion=next.test.version;
+    if(ui.activeLectureId && !next.lectures.some(lec=>lec.id===ui.activeLectureId))ui.activeLectureId=null;
     if(next.test.myResult) {ui.testSubmitted=true;ui.quizScore=next.test.myResult.score;ui.reviewCorrect=next.test.myResult.correct;ui.answers=next.test.myResult.answers||{};}
     const focused = document.activeElement;
     const typing = !force && focused && ['INPUT','TEXTAREA','SELECT'].includes(focused.tagName);
     const playerActive = document.querySelector('.player-frame iframe, .player-frame video');
-    const playerStillSame = playerActive && ui.tab==='home' && !force &&
-      JSON.stringify(store.get().liveStream) === JSON.stringify(next.liveStream);
+    const playerStillSame = playerActive && !force &&
+      (ui.tab==='lectures' || (ui.tab==='home' && JSON.stringify(store.get().liveStream) === JSON.stringify(next.liveStream)));
     if (playerStillSame) {
       // A full dashboard re-render would destroy an iframe and restart the lecture.
       store.setData(next,false);
       updateNavigation(ui.tab,next);
-      const list=document.getElementById('live-chat-list');
+      const list=ui.tab==='home' ? document.getElementById('live-chat-list') : null;
       if(list) {
         const bottom=list.scrollHeight-list.scrollTop-list.clientHeight<100;
         list.innerHTML=messagesList(next.liveChat,'It’s quiet here','Ask a question or say hello to your class.');
@@ -91,7 +95,9 @@ document.addEventListener('click',async event=>{
       case 'auth-mode':ui.mode=mode;showLogin();break;
       case 'logout':await doLogout();break;
       case 'filter-notes':ui.notesFilter=filter;renderPage();break;
-      case 'play-lecture':{const lec=store.get().lectures.find(x=>x.id===id);if(lec?.url){ui.activeVideo={title:lec.title,url:lec.url,live:false};navigate('home');}break;}
+      case 'play-lecture':{const lec=store.get().lectures.find(x=>x.id===id);if(lec?.url){ui.activeLectureId=id;renderPage();document.getElementById('lecture-player')?.scrollIntoView({behavior:'smooth',block:'start'});}break;}
+      case 'close-lecture':ui.activeLectureId=null;renderPage();document.querySelector('.library-toolbar')?.scrollIntoView({behavior:'smooth',block:'start'});break;
+      case 'toggle-password':{const field=document.getElementById('login-password');if(field){const visible=field.type==='password';field.type=visible?'text':'password';el.textContent=visible?'Hide':'Show';el.setAttribute('aria-pressed',String(visible));el.setAttribute('aria-label',visible?'Hide password':'Show password');}break;}
       case 'join-live':ui.activeVideo=null;navigate('home');document.querySelector('.main-player-card')?.scrollIntoView({behavior:'smooth',block:'center'});break;
       case 'answer':if(!ui.testSubmitted){ui.answers[Number(index)]=Number(option);renderPage();}break;
       case 'submit-test':await submitTest();break;
@@ -134,7 +140,15 @@ document.addEventListener('input',event=>{
     else if(field==='correct')q.correct=Number(event.target.value);
     else if(field==='verified')q.needsReview=!event.target.checked;
   }return;}
-  if(event.target.id==='global-search'){ui.search=event.target.value;if(['lectures','notes'].includes(ui.tab))renderPage();}});
+  if(['global-search','mobile-library-search'].includes(event.target.id)){
+    const input=event.target, start=input.selectionStart, end=input.selectionEnd, identity=input.id;
+    ui.search=input.value;
+    if(['lectures','notes'].includes(ui.tab)){
+      renderPage();
+      const updated=document.getElementById(identity);
+      if(updated){updated.focus({preventScroll:true});if(start!==null&&end!==null)updated.setSelectionRange(start,end);}
+    }
+  }});
 document.addEventListener('keydown',event=>{if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();navigate('lectures');}});
 document.addEventListener('change',async event=>{
   if(event.target.id!=='doubt-photo-input')return;
@@ -174,19 +188,38 @@ document.addEventListener('submit',async event=>{
       const file=form.elements.file.files?.[0];
       if(!file||file.size>8*1048576)throw new Error('Choose a PDF or DOCX file smaller than 8 MB.');
       if(!/\.(pdf|docx)$/i.test(file.name))throw new Error('Only PDF or DOCX files are accepted.');
-      toast('Extracting questions with AI. Large documents may take some time.');
-      const base64=await readBase64(file);
+      setImportProgress('read',0);
+      const base64=await readBase64(file,percentage=>setImportProgress('read',percentage));
+      setImportProgress('analyze');
       const result=await api('/test/import/preview',{method:'POST',body:{filename:file.name,base64}});
+      setImportProgress('review');
       ui.importDraft=result;ui.importTitle=store.get().test.title||file.name.replace(/\.(pdf|docx)$/i,'');
-      renderPage();toast(`Extracted ${result.questions.length} questions. Review before publishing.`);
+      renderPage();
+      document.getElementById('admin-import')?.scrollIntoView({behavior:'smooth',block:'start'});
+      toast(`Extracted ${result.questions.length} questions. Review before publishing.`);
     }
     if(id==='question-form'){
       const options=[0,1,2,3].map(i=>form.elements[`option${i}`].value.trim());
       await mutate('POST','/test/questions',{q:form.elements.question.value.trim(),options,correct:Number(form.elements.correct.value),title:form.elements.testTitle.value.trim()},'Quiz question added.');
     }
-  }catch(err){if(id==='login-form')loginError(err.message);else toast(err.message,true);}finally{if(button?.isConnected)button.disabled=false;}
+  }catch(err){if(id==='question-import-form')setImportProgress('error',0,err.message);if(id==='login-form')loginError(err.message);else toast(err.message,true);}finally{if(button?.isConnected)button.disabled=false;}
 });
-function readBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read document.'));reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.readAsDataURL(file);});}
+function setImportProgress(stage,percentage=0,message='') {
+  const panel=document.getElementById('extract-progress');if(!panel)return;
+  const firstShow=panel.hidden;
+  panel.hidden=false;
+  if(firstShow && stage==='read')requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'center'}));
+  const heading=document.getElementById('extract-stage'), count=document.getElementById('extract-stage-count');
+  const detail=document.getElementById('extract-progress-detail'), track=document.getElementById('extract-progress-track'), fill=document.getElementById('extract-progress-fill');
+  panel.classList.toggle('is-indeterminate',stage==='analyze');
+  panel.classList.toggle('is-error',stage==='error');
+  const states={read:['Reading document','Step 1 of 3','Preparing PDF / Word file…'],analyze:['AI is extracting questions','Step 2 of 3','Identifying questions, choices and answer keys. Please keep this page open.'],review:['Preparing review','Step 3 of 3','Preparing the editable questions for your approval.'],error:['Extraction stopped','Try again',message||'Could not extract the document.']};
+  const [title,step,description]=states[stage]||states.read;
+  if(heading)heading.textContent=title;if(count)count.textContent=step;if(detail)detail.textContent=description;
+  if(track){track.setAttribute('aria-label',title);track.setAttribute('aria-valuetext',stage==='analyze'?'Processing — completion time unknown':stage==='error'?'Failed':`${Math.round(percentage)}% of file read`);if(stage==='analyze'||stage==='error')track.removeAttribute('aria-valuenow');else track.setAttribute('aria-valuenow',String(stage==='review'?100:Math.round(percentage)));}
+  if(fill)fill.style.width=stage==='read'?`${Math.min(100,Math.max(0,percentage))}%`:stage==='review'?'100%':'';
+}
+function readBase64(file,onProgress=()=>{}){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read document.'));reader.onprogress=e=>{if(e.lengthComputable)onProgress(Math.round(e.loaded/e.total*100));};reader.onload=()=>{onProgress(100);resolve(String(reader.result).split(',')[1]);};reader.readAsDataURL(file);});}
 async function publishImportedQuestions(){
   if(!ui.importDraft?.questions?.length)throw new Error('There are no questions to publish.');
   const qs=ui.importDraft.questions;
