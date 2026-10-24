@@ -12,7 +12,7 @@ export function renderShell(user, tab, data) {
     const count = id === 'lectures' ? data.lectures.length : id === 'notes' ? data.notes.length : id === 'doubts' ? data.doubts.length : id === 'tests' ? Number(data.test.questions.length > 0) : null;
     return `<button class="side-link ${tab === id ? 'is-active' : ''}" type="button" data-nav="${id}" ${tab === id ? 'aria-current="page"' : ''}>${icon(glyph,19)}<span>${title}</span>${count !== null ? `<span class="side-count">${count}</span>` : ''}</button>`;
   };
-  return `<div class="app-layout">
+  return `<div class="app-layout ${faculty ? 'is-faculty' : ''}">
     <aside class="sidebar">
       <div>
         <div class="brand-lockup">${mark()}<div><strong>Punit Classes</strong><small>LEARN • GROW • SUCCEED</small></div></div>
@@ -29,11 +29,14 @@ export function renderShell(user, tab, data) {
       <header class="topbar">
         <div class="mobile-brand">${mark()}<strong>Punit Classes</strong></div>
         <div class="topbar-left"><span class="breadcrumb">My classroom</span>${icon('chevron', 14)}<span id="current-page-crumb">${tab === 'admin' ? 'Control center' : learn.find(x => x[0] === tab)?.[1] || 'Overview'}</span></div>
-        <div class="topbar-right"><label class="search-box">${icon('search', 17)}<input id="global-search" aria-label="Search lectures and resources" placeholder="Search your classroom..." autocomplete="off" /><span class="search-shortcut">⌕</span></label><span class="preview-flag" title="Connected to your classroom backend">${icon('lock', 13)} SECURE CLASSROOM</span>${faculty ? `<button type="button" class="mobile-admin-link ${tab === 'admin' ? 'is-active' : ''}" data-nav="admin" aria-label="Open teacher controls">${icon('sliders',17)}<span>Manage</span></button>` : ''}<div class="top-avatar" title="${esc(user.name)}">${esc(initials(user.name))}</div><button class="mobile-logout" data-action="logout" title="Sign out" aria-label="Sign out">${icon('logout', 17)}</button></div>
+        <div class="topbar-right"><label class="search-box">${icon('search', 17)}<input id="global-search" aria-label="Search lectures and resources" placeholder="Search your classroom..." autocomplete="off" /><span class="search-shortcut">⌕</span></label><span class="preview-flag" title="Connected to your classroom backend">${icon('lock', 13)} SECURE CLASSROOM</span><div class="top-avatar" title="${esc(user.name)}">${esc(initials(user.name))}</div><button type="button" class="mobile-logout" data-action="logout" title="Log out of Punit Classes" aria-label="Log out">${icon('logout', 17)}<span>Log out</span></button></div>
       </header>
       <main class="main-content" id="page-content" tabindex="-1"></main>
     </div>
-    <nav class="bottom-nav" aria-label="Mobile navigation">${learn.map(([id, title, glyph]) => `<button data-nav="${id}" class="bottom-link ${tab === id ? 'is-active' : ''}" aria-label="${title}">${icon(glyph,20)}<span>${id === 'home' ? 'Home' : id === 'lectures' ? 'Videos' : id === 'notes' ? 'Notes' : id === 'tests' ? 'Tests' : 'Doubts'}</span></button>`).join('')}</nav>
+    <nav class="bottom-nav ${faculty ? 'has-faculty-access' : ''}" aria-label="Mobile navigation">
+      ${faculty ? `<button type="button" class="faculty-mobile-entry ${tab === 'admin' ? 'is-active' : ''}" data-nav="admin" aria-label="Open admin dashboard" ${tab === 'admin' ? 'aria-current="page"' : ''}>${icon('sliders',18)}<span>Admin panel</span><small>Manage lessons, tests &amp; classes</small>${icon('arrow',15)}</button>` : ''}
+      <div class="bottom-nav-tabs">${learn.map(([id, title, glyph]) => `<button type="button" data-nav="${id}" class="bottom-link ${tab === id ? 'is-active' : ''}" aria-label="${title}" ${tab === id ? 'aria-current="page"' : ''}>${icon(glyph,20)}<span>${id === 'home' ? 'Home' : id === 'lectures' ? 'Videos' : id === 'notes' ? 'Notes' : id === 'tests' ? 'Tests' : 'Doubts'}</span></button>`).join('')}</div>
+    </nav>
   </div>`;
 }
 export function updateNavigation(tab, data) {

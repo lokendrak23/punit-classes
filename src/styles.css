@@ -204,3 +204,67 @@ button,.button,.bottom-link{touch-action:manipulation}
  .recent-item{min-width:0}
  .section-title{min-width:0;max-width:100%}
 }
+
+
+/* v5: visible faculty navigation + OS-safe mobile header/footer */
+@media (max-width:680px) {
+  /* Browser/PWA installed-mode safe area. The Android WebView additionally
+     gets its actual Android system bar insets from MainActivity. */
+  body { padding-top:env(safe-area-inset-top,0px); }
+  .app-layout { min-height:calc(100dvh - env(safe-area-inset-top,0px)); }
+  .topbar { position:sticky;top:env(safe-area-inset-top,0px);height:60px;min-height:60px;
+    padding:0 13px;z-index:45;display:flex;align-items:center;isolation:isolate; }
+  .topbar-right { flex:0 0 auto;gap:6px;min-width:0; }
+  .mobile-brand { min-width:0;flex:1; }
+  .mobile-brand strong { overflow:hidden;text-overflow:ellipsis; }
+  .mobile-admin-link { display:none!important; }
+  .mobile-logout { display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid #e3e1f9;border-radius:12px;padding:0 12px;
+    min-width:89px;width:auto;height:44px;min-height:44px;
+    background:#f3f0ff;color:#5545ca;font-size:12px;font-weight:800;
+    flex:0 0 auto;position:relative;z-index:1;white-space:nowrap; }
+  .mobile-logout svg { width:17px;height:17px; }
+  .bottom-nav { position:fixed;bottom:0;left:0;right:0;display:flex;flex-direction:column;
+    width:100%;height:auto;min-height:0;gap:0;padding:0;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background:#fff;border-top:1px solid #e4e6f1;box-shadow:0 -5px 24px #17234816;
+    z-index:50;box-sizing:border-box; }
+  .bottom-nav-tabs { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    width:100%;gap:2px;padding:7px 8px 8px; }
+  .bottom-nav .bottom-link { flex:none;min-width:0;min-height:49px;height:49px;width:100%;
+    padding:5px 0;gap:4px;touch-action:manipulation; }
+  .faculty-mobile-entry { width:calc(100% - 16px);margin:9px 8px 0;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    height:42px;min-height:42px;padding:0 12px;border:1px solid #d9d3fa;
+    border-radius:12px;background:#f3f0ff;color:#5a48ce;
+    font-size:13px;font-weight:850;white-space:nowrap;touch-action:manipulation; }
+  .faculty-mobile-entry span { flex:none; }
+  .faculty-mobile-entry small { font-size:10px;color:#8378b7;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .faculty-mobile-entry.is-active { background:#6856e7;color:#fff;border-color:#6856e7; }
+  .faculty-mobile-entry.is-active small { color:#f2edff; }
+  .faculty-mobile-entry svg:last-child { margin-left:auto; }
+  .main-content { padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)); }
+  .app-layout.is-faculty .main-content {
+    padding-bottom:calc(145px + env(safe-area-inset-bottom,0px)); }
+  .app-layout.is-faculty .page-heading { margin-bottom:16px; }
+  .admin-quick-actions { gap:10px; }
+  .admin-quick-actions button { border-color:#d9d9f2;background:#fbfaff;
+    min-height:66px;line-height:1.4;font-size:12px; }
+  .admin-grid .admin-panel { box-shadow:0 2px 12px #17234807; }
+  #toast-region { bottom:calc(95px + env(safe-area-inset-bottom,0px)); }
+  body:has(.has-faculty-access) #toast-region {
+    bottom:calc(148px + env(safe-area-inset-bottom,0px)); }
+}
+@media (max-width:355px) {
+  .mobile-brand strong { font-size:12px; }
+  .mobile-logout { min-width:80px;padding:0 9px;font-size:11px; }
+  .faculty-mobile-entry small { font-size:9px; }
+  .bottom-nav-tabs { padding-left:3px;padding-right:3px;gap:0; }
+}
+
+/* Keep the most frequently used faculty action first on narrow devices. */
+@media (max-width:680px) {
+  .admin-grid #admin-content { order:1; }
+  .admin-grid #admin-import { order:2; }
+}
